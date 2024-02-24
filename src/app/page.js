@@ -163,10 +163,16 @@ const items = [
   },
 ]
 
-const totalCost = items.reduce((a, b) => a + b.cost, 0)
+const overallSubtotal = items.reduce((a, b) => a + b.cost, 0)
+const overallTax = 48.69
+const overallTip = 112
 
 export default function Home() {
-  const [total, setTotal] = useState(0)
+  const [subtotal, setSubtotal] = useState(0)
+  const [tax, setTax] = useState(0)
+  const [tip, setTip] = useState(0)
+  const total = subtotal + tax + tip
+
   const form = useForm({
     defaultValues: {
       items: [],
@@ -174,14 +180,87 @@ export default function Home() {
   })
 
   function calculateTotal(data) {
-    const total = data.items
+    const subtotal = data.items
       .map((id) => items[id - 1])
       .reduce((a, b) => a + b.cost, 0)
-    setTotal(total)
+    const proportion = subtotal / overallSubtotal
+
+    setSubtotal(subtotal)
+    setTax(overallTax * proportion)
+    setTip(overallTip * proportion)
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-24">
+    <main className="flex min-h-screen max-w-lg mx-auto flex-col gap-8 p-24">
+      <section>
+        <h1 className="text-3xl font-bold mb-2">Step 1</h1>
+        <p className="text-zinc-500 mb-4">Select all items you're paying for</p>
+        <Form {...form}>
+          <form
+            // onSubmit={form.handleSubmit(calculateTotal)}
+            onChange={form.handleSubmit(calculateTotal)}
+            className="space-y-8"
+          >
+            <FormField
+              control={form.control}
+              name="items"
+              render={() => (
+                <FormItem>
+                  <div className="mb-4">
+                    <FormLabel className="text-base">Items ordered</FormLabel>
+                    {/* <FormDescription> */}
+                    {/*   Select the items you ordered */}
+                    {/* </FormDescription> */}
+                  </div>
+                  {items.map((item) => (
+                    <FormField
+                      key={item.id}
+                      control={form.control}
+                      name="items"
+                      render={({ field }) => {
+                        return (
+                          <FormItem
+                            key={item.id}
+                            className="flex flex-row items-start space-x-3 space-y-0"
+                          >
+                            <FormControl>
+                              <Checkbox
+                                {...form.register(`${item.id}`)}
+                                checked={field.value?.includes(item.id)}
+                                onCheckedChange={(checked) => {
+                                  return checked
+                                    ? field.onChange([...field.value, item.id])
+                                    : field.onChange(
+                                        field.value?.filter(
+                                          (value) => value !== item.id
+                                        )
+                                      )
+                                }}
+                              />
+                            </FormControl>
+                            <FormLabel className="text-sm font-normal flex justify-between w-full">
+                              <p>{item.label}</p>
+                              <p>{item.cost}</p>
+                            </FormLabel>
+                          </FormItem>
+                        )
+                      }}
+                    />
+                  ))}
+                </FormItem>
+              )}
+            />
+          </form>
+        </Form>
+      </section>
+      <section>
+        <h1 className="text-3xl font-bold mb-2">Step 2</h1>
+        <p className="text-zinc-500 mb-4">Pay MJ the following amount</p>
+        <p>
+          ${subtotal.toFixed(2)} + ${tax.toFixed(2)} + ${tip.toFixed(2)} = $
+          {total.toFixed(2)}
+        </p>
+      </section>
       <Dialog>
         <DialogTrigger>
           <Button variant="outline">Show receipt image</Button>
@@ -199,67 +278,6 @@ export default function Home() {
           />
         </DialogContent>
       </Dialog>
-      <p>
-        {total}/{totalCost}
-      </p>
-      <Form {...form}>
-        <form
-          // onSubmit={form.handleSubmit(calculateTotal)}
-          onChange={form.handleSubmit(calculateTotal)}
-          className="space-y-8"
-        >
-          <FormField
-            control={form.control}
-            name="items"
-            render={() => (
-              <FormItem>
-                <div className="mb-4">
-                  <FormLabel className="text-base">Items ordered</FormLabel>
-                  {/* <FormDescription> */}
-                  {/*   Select the items you ordered */}
-                  {/* </FormDescription> */}
-                </div>
-                {items.map((item) => (
-                  <FormField
-                    key={item.id}
-                    control={form.control}
-                    name="items"
-                    render={({ field }) => {
-                      return (
-                        <FormItem
-                          key={item.id}
-                          className="flex flex-row items-start space-x-3 space-y-0"
-                        >
-                          <FormControl>
-                            <Checkbox
-                              {...form.register(`${item.id}`)}
-                              checked={field.value?.includes(item.id)}
-                              onCheckedChange={(checked) => {
-                                return checked
-                                  ? field.onChange([...field.value, item.id])
-                                  : field.onChange(
-                                      field.value?.filter(
-                                        (value) => value !== item.id
-                                      )
-                                    )
-                              }}
-                            />
-                          </FormControl>
-                          <FormLabel className="text-sm font-normal flex justify-between w-full">
-                            <p>{item.label}</p>
-                            <p>{item.cost}</p>
-                          </FormLabel>
-                        </FormItem>
-                      )
-                    }}
-                  />
-                ))}
-              </FormItem>
-            )}
-          />
-          <Button type="submit">Submit</Button>
-        </form>
-      </Form>
     </main>
   )
 }
