@@ -8,11 +8,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-// import { CaretSortIcon } from '@radix-ui/react-icons'
+import { CaretSortIcon } from '@radix-ui/react-icons'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -171,6 +176,7 @@ export default function Home() {
   const [subtotal, setSubtotal] = useState(0)
   const [tax, setTax] = useState(0)
   const [tip, setTip] = useState(0)
+  const [selected, setSelected] = useState([])
   const total = subtotal + tax + tip
 
   const form = useForm({
@@ -180,18 +186,18 @@ export default function Home() {
   })
 
   function calculateTotal(data) {
-    const subtotal = data.items
-      .map((id) => items[id - 1])
-      .reduce((a, b) => a + b.cost, 0)
+    const selectedItems = data.items.map((id) => items[id - 1])
+    const subtotal = selectedItems.reduce((a, b) => a + b.cost, 0)
     const proportion = subtotal / overallSubtotal
 
+    setSelected(selectedItems)
     setSubtotal(subtotal)
     setTax(overallTax * proportion)
     setTip(overallTip * proportion)
   }
 
   return (
-    <main className="flex min-h-screen max-w-lg mx-auto flex-col gap-8 p-24">
+    <main className="flex min-h-screen max-w-lg mx-auto flex-col gap-8 p-8">
       <section>
         <h1 className="text-3xl font-bold mb-2">Step 1</h1>
         <p className="text-zinc-500 mb-4">Select all items you're paying for</p>
@@ -255,11 +261,45 @@ export default function Home() {
       </section>
       <section>
         <h1 className="text-3xl font-bold mb-2">Step 2</h1>
-        <p className="text-zinc-500 mb-4">Pay MJ the following amount</p>
-        <p>
-          ${subtotal.toFixed(2)} + ${tax.toFixed(2)} + ${tip.toFixed(2)} = $
-          {total.toFixed(2)}
+        <p className="text-zinc-500 mb-4">Pay MJ the bolded amount</p>
+        <p className="mb-4">
+          ${subtotal.toFixed(2)} + ${tax.toFixed(2)} + ${tip.toFixed(2)} ={' '}
+          <span className="font-bold">${total.toFixed(2)}</span>
         </p>
+        {selected.length > 0 && (
+          <Collapsible>
+            <CollapsibleTrigger className="flex items-center gap-1">
+              Details
+              <CaretSortIcon />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="flex flex-col gap-3">
+              <section>
+                <p className="font-bold">Subtotal</p>
+                <p>
+                  {selected
+                    .sort((a, b) => a.id - b.id)
+                    .slice(0, -1)
+                    .map((item) => `$${item.cost} + `)}{' '}
+                  ${selected[selected.length - 1]?.cost} = ${subtotal}
+                </p>
+              </section>
+              <section>
+                <p className="font-bold">Tax</p>
+                <p>group tax x (subtotal / group subtotal)</p>
+                <p>
+                  ${overallTax} x (${subtotal} / $513) = ${tax.toFixed(2)}
+                </p>
+              </section>
+              <section>
+                <p className="font-bold">Tip</p>
+                <p>group tip x (subtotal / group subtotal)</p>
+                <p>
+                  ${overallTip} x (${subtotal} / $513) = ${tip.toFixed(2)}
+                </p>
+              </section>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
       </section>
       <Dialog>
         <DialogTrigger>
