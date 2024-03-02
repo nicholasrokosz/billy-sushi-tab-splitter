@@ -9,9 +9,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { CaretSortIcon } from '@radix-ui/react-icons'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
 
 import {
   Collapsible,
@@ -23,7 +21,6 @@ import { Checkbox } from '@/components/ui/checkbox'
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -203,7 +200,6 @@ export default function Home() {
         <p className="text-zinc-500 mb-4">Select all items you're paying for</p>
         <Form {...form}>
           <form
-            // onSubmit={form.handleSubmit(calculateTotal)}
             onChange={form.handleSubmit(calculateTotal)}
             className="space-y-8"
           >
@@ -214,9 +210,6 @@ export default function Home() {
                 <FormItem>
                   <div className="mb-4">
                     <FormLabel className="text-base">Items ordered</FormLabel>
-                    {/* <FormDescription> */}
-                    {/*   Select the items you ordered */}
-                    {/* </FormDescription> */}
                   </div>
                   {items.map((item) => (
                     <FormField
